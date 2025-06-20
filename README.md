@@ -2,7 +2,7 @@
 
 **MindfulBreath** is an interactive breathing system designed to support mindfulness novices by providing personalized biofeedback before meditation. It guides users through paced breathing using real-time respiratory data, visualized through dynamic animations of a human figure—mirroring the sequence of a traditional body scan.
 
-This repository contains the system's codebase along with example content files and experimental assets used in our study presented at **Ubicomp Workshop ’25**.
+This repository contains the system's codebase along with example content files and experimental assets used in our study.
 
 ---
 
