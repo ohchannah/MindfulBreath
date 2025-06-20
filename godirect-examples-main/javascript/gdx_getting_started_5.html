@@ -1,0 +1,147 @@
+<!--
+  This example uses the GDX JavaScript library to collect and manipulate data from a Vernier Go Direct® Sensor.
+  Press the 'Select Go Direct Device' button to open communication to the device in a Chrome browser.
+  Press the 'Download CSV' button at the bottom of the webpage to save a copy of the data as a csv file.
+  
+  This program uses the following functions from the GDX Library:
+   
+  gdxDevice.selectDevice();
+  gdxDevice.close();
+  gdxDevice.start();
+  gdxDevice.getSensor(int);
+  sensor.setEnabled(bool);
+-->    
+
+<!doctype html>
+<html>
+<head>
+  <title>Example 5: Export Sensor Data as CSV</title>
+  <meta name="description" content="The gdx_getting_started_5.html example provides some ideas about what you can do with sensor data by exporting csv.">
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/@vernier/godirect/dist/godirect.min.umd.js"></script>
+  
+</head>
+
+<body>
+  <h1>Vernier Go Direct<sup>&reg</sup> JavaScript</h1>
+  <h2>Example 5: Export Sensor Data as CSV</h2>
+  <p>
+    This example shows how you can use the godirect-js module to communicate with a <a href="https://www.vernier.com/products/sensors/go-direct-sensors/">Vernier Go Direct Sensor</a>. This includes:
+    <ul>
+      <li>Select a Go Direct Device</li>
+      <li>Enable the first sensor</li>
+      <li>Collect 10 measurements</li>
+      <li>Disconnect</li>
+      <li>Allow the user to output the data as a comma-separated-value file</li>
+    </ul>
+  </p>
+  <p id="connection_type">
+    <input type="radio" id="ble" name="type" value="1" checked>
+    <label id="ble_label" for="ble">Bluetooth</label>
+    <input type="radio" id="usb" name="type" value="0">
+    <label id="usb_label" for="usb">USB</label><br>
+  </p>
+  <button id="select_device">Select a Go Direct Device</button>
+  <div id="error"></div>
+  <pre id="output"></pre>
+  <button id="csv" onclick="download_csv()">Download CSV</button>
+  <script>
+    const usbBtn = document.querySelector('#usb');
+    const usbLabel = document.querySelector('#usb_label');
+    const bleBtn = document.querySelector('#ble');
+    const bleLabel = document.querySelector('#ble_label');
+    const selectDeviceBtn = document.querySelector('#select_device');
+    const csvBtn = document.querySelector('#csv');
+    const output = document.querySelector('#output');
+    const error = document.querySelector('#error');
+
+    if (navigator.bluetooth) {
+      bleLabel.innerHTML = `Bluetooth`;
+    } else {
+      if (navigator.hid) usbBtn.checked = true;
+      bleLabel.innerHTML = `Bluetooth <span style="color:red">Not Supported</span> <a href="https://webbluetoothcg.github.io/web-bluetooth/">More information</a>`;
+      bleBtn.disabled = true;
+    }
+
+    if (navigator.hid) {
+      usbLabel.innerHTML = `USB`;
+    } else {
+      if (navigator.bluetooth) bleBtn.checked = true;
+      usbLabel.innerHTML = `USB <span style="color:red">Not Supported</span> <a href="https://wicg.github.io/webhid/">More information</a>`;
+      usbBtn.disabled = true;
+    }
+
+    if (!navigator.bluetooth && !navigator.hid) {
+      selectDeviceBtn.style.visibility='hidden';
+    } 
+
+    csvBtn.style.visibility='hidden';
+   
+    // create array to store data to be saved in the csv file
+    let data = [];
+    let sensor = null;
+
+    const selectDevice = async () => {     
+      const bluetooth = document.querySelector('input[name="type"]:checked').value === "1";
+      error.textContent = "";
+      try {
+        const gdxDevice = await godirect.selectDevice(bluetooth);
+        
+        gdxDevice.start(1000);
+        
+        output.textContent += `\n Connected to `+gdxDevice.name;
+        output.textContent += `\n Reading 10 measurements `;
+      
+        gdxDevice.on('device-closed', () => {
+          output.textContent += `\n\n Disconnected from `+gdxDevice.name+`\n`;
+          csvBtn.style.visibility='visible';
+
+        });
+        
+        sensor = gdxDevice.getSensor(1);
+        sensor.setEnabled(true);
+
+        sensor.on('value-changed', (sensor) => {
+          // only collect 10 samples and disconnect.
+          if (sensor.values.length > 10){
+            gdxDevice.close();
+          }
+          // log the sensor name, new value and units.
+          console.log(`Sensor: ${sensor.name} value: ${sensor.value} units: ${sensor.unit}`);
+         // add data points to the data array
+          data.push(sensor.value);
+          // output the change to the pre tag
+          output.textContent += `\n Sensor: ${sensor.name} value: ${sensor.value} units: ${sensor.unit}`;
+        });
+    
+      } catch (err) {
+        console.error(err);
+        error.innerText += "\n "+err;
+        if (err.toString().includes('cross-origin')) {
+          error.innerHTML+= '\n<p><b>Are you running in an embedded iframe? Try running this example in its own window.</b></p>'
+        }
+      }
+    };
+
+    // download csv function to be used when button is pressed
+    function download_csv() {
+      let csv = sensor.name;
+
+      // add each row of the the sensor data array to the csv file
+      data.forEach( row => {
+        csv +=  " \n" + row;
+      });
+
+      // create and download new csv file
+      console.log(csv);
+      let hiddenElement = document.createElement('a');
+      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+      hiddenElement.target = '_blank';
+      hiddenElement.download = 'sensor.csv';
+      hiddenElement.click();
+    }
+
+    selectDeviceBtn.addEventListener('click', selectDevice);
+  </script>
+</body>
+</html>
