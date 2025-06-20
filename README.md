@@ -29,7 +29,8 @@ The system was evaluated in a controlled study comparing passive relaxation, gen
 
 ## Per-Region Visualization Example
 
-![image](https://github.com/user-attachments/assets/9ce267c9-1519-474b-9783-34c526be8ee2)
+![image](https://github.com/user-attachments/assets/6d7eec2a-b7f3-45cb-b321-801067c09972)
+
 
 Each inhale–exhale cycle activates a specific body part in the visualization. This sequence aligns with the body scan practice to scaffold user attention and embodied focus.
 
